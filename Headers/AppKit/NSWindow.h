@@ -121,6 +121,26 @@ typedef enum _NSWindowButton
 } NSWindowButton;
 #endif 
 
+enum {
+   NSWindowCollectionBehaviorDefault = 0,
+   NSWindowCollectionBehaviorCanJoinAllSpaces = 1,
+   NSWindowCollectionBehaviorMoveToActiveSpace = 2
+};
+enum {
+   NSWindowCollectionBehaviorManaged = 4,
+   NSWindowCollectionBehaviorTransient = 8,
+   NSWindowCollectionBehaviorStationary = 16,
+};
+enum {
+   NSWindowCollectionBehaviorParticipatesInCycle = 32,
+   NSWindowCollectionBehaviorIgnoresCycle = 64
+};
+enum {
+   NSWindowCollectionBehaviorFullScreenPrimary = 128,
+   NSWindowCollectionBehaviorFullScreenAuxiliary = 256
+};
+typedef NSUInteger NSWindowCollectionBehavior;
+
 APPKIT_EXPORT NSSize NSIconSize;
 APPKIT_EXPORT NSSize NSTokenSize;
 
@@ -665,6 +685,7 @@ PACKAGE_SCOPE
 - (void) setCanHide: (BOOL)flag;
 - (BOOL) canHide;
 #endif
+- (void)setCollectionBehavior: (NSWindowCollectionBehavior)behavior;
 
 /*
  * Accessing the content view

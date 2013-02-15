@@ -1633,6 +1633,11 @@ titleWithRepresentedFilename(NSString *representedFilename)
   return _f.can_hide;
 }
 
+- (void) setCollectionBehavior: (NSWindowCollectionBehavior)behavior
+{
+  // TODO
+}
+
 - (BOOL) isKeyWindow
 {
   return _f.is_key;
