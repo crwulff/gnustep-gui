@@ -168,7 +168,7 @@ typedef struct _tableViewFlags
  *  This is used by the -sizeToFit method
  */
 typedef struct {
-  float width;
+  CGFloat width;
   BOOL isMax;
 } columnSorting;
 
@@ -180,7 +180,7 @@ void quick_sort_internal(columnSorting *data, int p, int r)
     {
       int q;
       {
-	float x = data[p].width;
+	CGFloat x = data[p].width;
 	BOOL y = data[p].isMax;
 	int i = p - 1;
 	int j = r + 1;
@@ -2532,13 +2532,13 @@ static void computeNewSelection
   return _intercellSpacing;
 }
 
-- (void) setRowHeight: (float)rowHeight
+- (void) setRowHeight: (CGFloat)rowHeight
 {
   _rowHeight = rowHeight;
   [self tile];
 }
 
-- (float) rowHeight
+- (CGFloat) rowHeight
 {
   return _rowHeight;
 }
@@ -5076,7 +5076,7 @@ This method is deprecated, use -columnIndexesInRect:. */
     {
       NSRect columnRect = [self rectOfColumn: columnIndex];
       NSRect visibleRect = [self visibleRect];
-      float diff;
+      CGFloat diff;
 
       // If the row is out on the left, or it is partially visible 
       // on the left
@@ -6189,162 +6189,175 @@ This method is deprecated, use -columnIndexesInRect:. */
   [self displayIfNeeded];
 }
 
-- (NSDragOperation) draggingUpdated: (id <NSDraggingInfo>) sender
+- (void) _drawDropIndicator
 {
-  NSPoint p = [sender draggingLocation];
-  NSRect newRect;
-  int row;
-  int quarterPosition, positionInRow;
-  int currentRow;
-  NSDragOperation dragOperation;
+  NSRect newRect = NSZeroRect;
 
-  p = [self convertPoint: p fromView: nil];
-  /* This is a crude method of scrolling the view while dragging so
-     the user can drag to any cell even if it's not
-     visible. Unfortunately we don't receive events when the drag is
-     outside the view, so the pointer must still be in the view to
-     drag.
-  */
-  if (p.y < NSMinY([self visibleRect])+3)
+  [self lockFocus];
+  [self setNeedsDisplayInRect: oldDraggingRect];
+  [self displayIfNeeded];
+
+  [[NSColor darkGrayColor] set];
+
+  if (currentDropRow == -1)
+    {
+	   newRect = [self bounds];
+	   NSFrameRectWithWidth(newRect, 2.0);
+	   oldDraggingRect = newRect;
+	}
+  else if (currentDropOperation == NSTableViewDropAbove)
+	{
+	  if (currentDropRow == 0)
+		{
+		  newRect = NSMakeRect([self visibleRect].origin.x,
+					currentDropRow * _rowHeight,
+					[self visibleRect].size.width,
+					3);
+		}
+	  else if (currentDropRow == _numberOfRows)
+		{
+		  newRect = NSMakeRect([self visibleRect].origin.x,
+					currentDropRow * _rowHeight - 2,
+					[self visibleRect].size.width,
+					3);
+		}
+	  else
+	    {
+          newRect = NSMakeRect([self visibleRect].origin.x,
+				    currentDropRow * _rowHeight - 1,
+				    [self visibleRect].size.width,
+				    3);
+	    }
+	  NSRectFill(newRect);
+	  oldDraggingRect = newRect;
+	}
+  else
+	{
+	  newRect = [self frameOfCellAtColumn: 0
+	                                  row: currentDropRow];
+	  newRect.origin.x = _bounds.origin.x;
+	  newRect.size.width = _bounds.size.width + 2;
+	  newRect.origin.x -= _intercellSpacing.height / 2;
+	  newRect.size.height += _intercellSpacing.height;
+
+	  newRect.size.height -= 1;
+	  newRect.origin.x += 3;
+	  newRect.size.width -= 3;
+
+	  if (_drawsGrid)
+		{
+			//newRect.origin.y += 1;
+			//newRect.origin.x += 1;
+			//newRect.size.width -= 2;
+			newRect.size.height += 1;
+		}
+	  NSFrameRectWithWidth(newRect, 2.0);
+
+	  oldDraggingRect = newRect;
+	  oldDraggingRect.origin.y -= 1;
+	  oldDraggingRect.size.height += 2;
+	}
+
+	[_window flushWindow];
+	[self unlockFocus];
+}
+
+/* This is a crude method of scrolling the view while dragging so the user can 
+drag to any cell even if it's not visible. Unfortunately we don't receive 
+events when the drag is outside the view, so the pointer must still be in the 
+view to drag. */
+- (void) _scrollRowAtPointToVisible: (NSPoint)p
+{
+  NSInteger currentRow;
+
+  if (p.y < NSMinY([self visibleRect]) + 3)
     {
       currentRow = [self rowAtPoint: p] - 1;
       if (currentRow > 0)
         [self scrollRowToVisible: currentRow];
     }
-  else if (p.y > NSMaxY([self visibleRect])-3)
+  else if (p.y > NSMaxY([self visibleRect]) - 3)
     {
       currentRow = [self rowAtPoint: p] + 1;
       if (currentRow < _numberOfRows)
         [self scrollRowToVisible: currentRow];
     }
+}
 
-  positionInRow = (int)(p.y - _bounds.origin.y) % (int)_rowHeight;
-  quarterPosition = (p.y - _bounds.origin.y) / _rowHeight * 4.;
+- (NSInteger) _computedRowAtPoint: (NSPoint)p
+{
+  return (NSInteger)(p.y - _bounds.origin.y) / (NSInteger)_rowHeight;
+}
 
+- (void) _setDropOperationAndRow: (NSInteger)row
+              usingPositionInRow: (NSInteger)positionInRow 
+                         atPoint: (NSPoint)p
+{
+  NSParameterAssert(row > -1);
+  BOOL isPositionInsideMiddleQuartersOfRow = 
+    (positionInRow > _rowHeight / 4 && positionInRow <= (3 * _rowHeight) / 4);
+  BOOL isDropOn = (row > _numberOfRows || isPositionInsideMiddleQuartersOfRow); 
+
+  [self setDropRow: (isDropOn ? [self _computedRowAtPoint: p] : row)
+     dropOperation: (isDropOn ? NSTableViewDropOn : NSTableViewDropAbove)];
+}
+
+- (NSInteger) _dropRowFromQuarterPosition: (NSInteger)quarterPosition
+{
   if ((quarterPosition - oldDropRow * 4 <= 2) &&
       (quarterPosition - oldDropRow * 4 >= -3))
     {
-      row = oldDropRow;
+      return oldDropRow;
     }
   else
     {
-      row = (quarterPosition + 2) / 4;
+      return (quarterPosition + 2) / 4;
     }
+}
 
-  // Are we in the two middle quarters of the row? Use TableViewDropOn
-  if ((positionInRow > _rowHeight / 4 && positionInRow <= (3 * _rowHeight) / 4)
-   || row > _numberOfRows)
+- (NSDragOperation) draggingUpdated: (id <NSDraggingInfo>) sender
+{
+  NSPoint p = [self convertPoint: [sender draggingLocation] fromView: nil];
+  NSInteger positionInRow = (NSInteger)(p.y - _bounds.origin.y) % (int)_rowHeight;
+  NSInteger quarterPosition = (NSInteger)([self _computedRowAtPoint: p] * 4.);
+  NSInteger row = [self _dropRowFromQuarterPosition: quarterPosition];
+  NSDragOperation dragOperation = [sender draggingSourceOperationMask];
+  BOOL isSameDropTargetThanBefore = (lastQuarterPosition == quarterPosition
+    && currentDragOperation == dragOperation);
+
+  [self _scrollRowAtPointToVisible: p];
+
+  if (isSameDropTargetThanBefore)
+    return currentDragOperation;
+
+  /* Remember current drop target */
+  currentDragOperation = dragOperation;
+  lastQuarterPosition = quarterPosition;
+ 
+  /* The user can retarget this default drop using -setDropRow:dropOperation: 
+     in -tableView:validateDrop:proposedRow:proposedDropOperation:. */
+  [self _setDropOperationAndRow: row 
+             usingPositionInRow: positionInRow 
+                        atPoint: p];
+
+  if ([_dataSource respondsToSelector: 
+      @selector(tableView:validateDrop:proposedRow:proposedDropOperation:)])
     {
-      currentDropRow  = (int)(p.y - _bounds.origin.y) / (int)_rowHeight;
-      currentDropOperation = NSTableViewDropOn;
-      if (currentDropRow >= _numberOfRows)
-        currentDropRow = -1;
+      currentDragOperation = [_dataSource tableView: self
+                                       validateDrop: sender
+                                        proposedRow: currentDropRow
+                              proposedDropOperation: currentDropOperation];
     }
-  else // drop above
+  
+  /* -setDropRow:dropOperation: can changes both currentDropRow and 
+     currentDropOperation. Whether we have to redraw the drop indicator depends 
+     on this change. */
+  if (currentDropRow != oldDropRow || currentDropOperation != oldDropOperation)
     {
-      currentDropRow = row;
-      currentDropOperation = NSTableViewDropAbove;
+      [self _drawDropIndicator]; 
+      oldDropRow = (currentDropRow > -1 ? currentDropRow : _numberOfRows);
+      oldDropOperation = currentDropOperation;
     }
-
-  dragOperation = [sender draggingSourceOperationMask];
-  if ((lastQuarterPosition != quarterPosition)
-      || (currentDragOperation != dragOperation))
-    {
-      currentDragOperation = dragOperation;
-      if ([_dataSource respondsToSelector: 
-             @selector(tableView:validateDrop:proposedRow:proposedDropOperation:)])
-        {
-          currentDragOperation = [_dataSource tableView: self
-                                              validateDrop: sender
-                                              proposedRow: currentDropRow
-                                              proposedDropOperation: currentDropOperation];
-        }
-      
-      lastQuarterPosition = quarterPosition;
-      
-      if ((currentDropRow != oldDropRow) || (currentDropOperation != oldDropOperation))
-	{
-	  [self lockFocus];
-	  
-	  [self setNeedsDisplayInRect: oldDraggingRect];
-	  [self displayIfNeeded];
-	  
-	  [[NSColor darkGrayColor] set];
-
-	  if (currentDropRow == -1)
-	    {
-	      newRect = [self bounds];
-	      NSFrameRectWithWidth(newRect, 2.0);
-	      oldDraggingRect = newRect;
-	      currentDropRow = _numberOfRows;
-	    }
-	  else if (currentDropOperation == NSTableViewDropAbove)
-	    {
-	      if (currentDropRow == 0)
-		{
-		  newRect = NSMakeRect([self visibleRect].origin.x,
-				       currentDropRow * _rowHeight,
-				       [self visibleRect].size.width,
-				       3);
-		}
-	      else if (currentDropRow == _numberOfRows)
-		{
-		  newRect = NSMakeRect([self visibleRect].origin.x,
-				       currentDropRow * _rowHeight - 2,
-				       [self visibleRect].size.width,
-				       3);
-		}
-	      else
-		{
-		  newRect = NSMakeRect([self visibleRect].origin.x,
-				       currentDropRow * _rowHeight - 1,
-				       [self visibleRect].size.width,
-				       3);
-		}
-	      NSRectFill(newRect);
-	      oldDraggingRect = newRect;
-	    }
-	  else
-	    {
-	      newRect = [self frameOfCellAtColumn: 0
-			      row: currentDropRow];
-	      newRect.origin.x = _bounds.origin.x;
-	      newRect.size.width = _bounds.size.width + 2;
-	      newRect.origin.x -= _intercellSpacing.height / 2;
-	      newRect.size.height += _intercellSpacing.height;
-	      oldDraggingRect = newRect;
-	      oldDraggingRect.origin.y -= 1;
-	      oldDraggingRect.size.height += 2;
-
-	      newRect.size.height -= 1;
-
-	      newRect.origin.x += 3;
-	      newRect.size.width -= 3;
-		
-	      if (_drawsGrid)
-		{
-		  //newRect.origin.y += 1;
-		  //newRect.origin.x += 1;
-		  //newRect.size.width -= 2;
-		  newRect.size.height += 1;
-		}
-	      else
-		{
-		}
-
-	      NSFrameRectWithWidth(newRect, 2.0);
-	      //	      NSRectFill(newRect);
-
-	    }
-	  [_window flushWindow];
-	  
-	  [self unlockFocus];
-	  
-	  oldDropRow = currentDropRow;
-	  oldDropOperation = currentDropOperation;
-	}
-    }
-
 
   return currentDragOperation;
 }
@@ -6361,6 +6374,7 @@ This method is deprecated, use -columnIndexesInRect:. */
   else
     return NO;
 }
+
 - (BOOL) prepareForDragOperation: (id<NSDraggingInfo>)sender
 {
   [self setNeedsDisplayInRect: oldDraggingRect];
