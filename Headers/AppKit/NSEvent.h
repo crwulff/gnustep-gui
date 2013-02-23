@@ -349,6 +349,7 @@ enum
 - (unsigned short) keyCode;
 - (NSPoint) locationInWindow;
 - (NSUInteger) modifierFlags;
++ (NSUInteger) modifierFlags;
 - (float) pressure;
 - (short) subtype;
 - (NSTimeInterval) timestamp;

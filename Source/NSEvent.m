@@ -928,6 +928,14 @@ static const char *eventTypes[] = {
 }
 
 /**
+ * Returns the currently pressed modifier flag bits.
+ */
++ (NSUInteger)modifierFlags
+{
+  return 0; // TODO
+}
+
+/**
  * Returns the pressure associated with a mouse event.  This is a value
  * in the range 0.0 to 1.0 and for mormal mouse events should be set to
  * one of those extremes.  This is used by pressure sensitive input devices.
