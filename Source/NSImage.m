@@ -154,8 +154,8 @@ repd_for_rep(NSArray *_reps, NSImageRep *rep)
 
 @interface NSImage (Private)
 + (void) _clearFileTypeCaches: (NSNotification*)notif;
-+ (void) _setImagePath: (NSString*)path name: (NSString*)name;
 + (NSString *) _pathForImageNamed: (NSString *)aName;
++ (void) _reloadCachedImages;
 - (BOOL) _useFromFile: (NSString *)fileName;
 - (BOOL) _loadFromData: (NSData *)data;
 - (BOOL) _loadFromFile: (NSString *)fileName;
@@ -444,6 +444,17 @@ repd_for_rep(NSArray *_reps, NSImageRep *rep)
     }
   
   return copy;
+}
+
+- (BOOL) isEqual: (id)anObject
+{
+  if (self == anObject)
+    return YES;
+  if (![anObject isKindOfClass: [NSImage class]])
+    return NO;
+
+  // FIXME
+  return NO;
 }
 
 /* This methd sets the name of an image, updating the global name dictionary
@@ -1540,8 +1551,8 @@ static NSSize GSResolutionOfImageRep(NSImageRep *rep)
 
   if ([coder allowsKeyedCoding])
     {
-      // FIXME: Not sure this is the way it goes...
-      /*
+      int flags = 0;
+
       if (_flags.archiveByName == NO)
         {
           NSMutableArray *container = [NSMutableArray array];
@@ -1549,24 +1560,41 @@ static NSSize GSResolutionOfImageRep(NSImageRep *rep)
           NSEnumerator *en = [_reps objectEnumerator];
           GSRepData *rd = nil;
 
-          // add the reps to the container...
-          [container addObject: reps];
-          while ((rd = [en nextObject]) != nil)
+          if ([_reps count] > 0)
             {
-              [reps addObject: rd->rep];
+              [reps addObject: [NSNumber numberWithInt: 0]];
+              while ((rd = [en nextObject]) != nil)
+                {
+                  [reps addObject: rd->rep];
+                }
+
+              // add the reps to the container...
+              [container addObject: reps];
+              [coder encodeObject: container forKey: @"NSReps"];
             }
-          [coder encodeObject: container forKey: @"NSReps"];
         }
       else
         {
-          [coder encodeObject: _name forKey: @"NSImageName"];
+          [coder encodeObject: _name forKey: @"NSName"];
         }
-      */
 
       // encode the rest...
-      [coder encodeObject: _color forKey: @"NSColor"];
-      [coder encodeInt: 0 forKey: @"NSImageFlags"]; // zero...
-      [coder encodeSize: _size forKey: @"NSSize"];
+      if (_color != nil)
+        {
+          [coder encodeObject: _color forKey: @"NSColor"];
+        }
+      flags |= [self scalesWhenResized] ? 0x8000000 : 0;
+      flags |= _flags.sizeWasExplicitlySet ? 0x2000000 : 0;
+      flags |= [self usesEPSOnResolutionMismatch] ? 0x0200000 : 0;
+      flags |= [self prefersColorMatch] ? 0x0100000 : 0;
+      flags |= [self matchesOnMultipleResolution] ? 0x0080000 : 0;
+      flags |= [self isFlipped] ? 0x0008000 : 0;
+      flags |= [self cacheMode] << 11;
+      [coder encodeInt: flags forKey: @"NSImageFlags"];
+      if (_flags.sizeWasExplicitlySet)
+        {
+          [coder encodeSize: _size forKey: @"NSSize"];
+        }
     }
   else
     {
@@ -1635,51 +1663,68 @@ static NSSize GSResolutionOfImageRep(NSImageRep *rep)
   _reps = [[NSMutableArray alloc] initWithCapacity: 2];
   if ([coder allowsKeyedCoding])
     {
+      if ([coder containsValueForKey: @"NSName"])
+        {
+          RELEASE(self);
+          return RETAIN([NSImage imageNamed: [coder decodeObjectForKey: @"NSName"]]);
+        }
       if ([coder containsValueForKey: @"NSColor"])
         {
           [self setBackgroundColor: [coder decodeObjectForKey: @"NSColor"]];
         }
       if ([coder containsValueForKey: @"NSImageFlags"])
         {
-          //FIXME
-          //int flags = [coder decodeIntForKey: @"NSImageFlags"];
+          int flags = [coder decodeIntForKey: @"NSImageFlags"];
+
+          [self setScalesWhenResized: ((flags & 0x8000000) != 0)];
+          // _flags.sizeWasExplicitlySet = ((flags & 0x2000000) != 0);
+          [self setUsesEPSOnResolutionMismatch: ((flags & 0x0200000) != 0)];
+          [self setPrefersColorMatch: ((flags & 0x0100000) != 0)];
+          [self setMatchesOnMultipleResolution: ((flags & 0x0080000) != 0)];
+          [self setFlipped: ((flags & 0x0008000) != 0)];
+          // ALIASED ((flags & 0x0004000) != 0)
+          [self setCacheMode: ((flags & 0x0001800) >> 11)];
         }
       if ([coder containsValueForKey: @"NSReps"])
         {
           NSArray *reps;
+          NSUInteger i;
 
           // FIXME: NSReps is in a strange format. It is a mutable array with one 
           // element which is an array with a first element 0 and than the image rep.  
           reps = [coder decodeObjectForKey: @"NSReps"];
           reps = [reps objectAtIndex: 0];
-	  id rep = [reps objectAtIndex: 1];
-	  if ([rep isKindOfClass: [NSImageRep class]])
-	    { 
-	      [self addRepresentation: rep];
-	    }
-	  else
-	    {
-	      if ([rep isKindOfClass: [NSURL class]])
-		{
-                  NSURL *tmp = (NSURL*)rep;
-		  rep = [NSImageRep imageRepWithContentsOfURL: rep];
-
-		  // If we are unable to resolved the URL, try to get it from the 
-		  // resources folder.
-		  if (rep == nil)
-		    {
-		      NSString *fileName = [[tmp absoluteString] lastPathComponent];
-		      NSString *path = [[NSBundle mainBundle] pathForImageResource: fileName];
-		      rep = [NSImageRep imageRepWithContentsOfFile: path];
-		    }
-
-		  // If the representation was found, add it...
-		  if (rep != nil)
-		    {
-		      [self addRepresentation: rep];
-		    }
-		}
-	    }
+          for (i = 1; i < [reps count]; i++)
+            {
+              id rep = [reps objectAtIndex: i];
+              if ([rep isKindOfClass: [NSImageRep class]])
+                { 
+                  [self addRepresentation: rep];
+                }
+              else
+                {
+                  if ([rep isKindOfClass: [NSURL class]])
+                    {
+                      NSURL *tmp = (NSURL*)rep;
+                      rep = [NSImageRep imageRepWithContentsOfURL: rep];
+                      
+                      // If we are unable to resolved the URL, try to get it from the 
+                      // resources folder.
+                      if (rep == nil)
+                        {
+                          NSString *fileName = [[tmp absoluteString] lastPathComponent];
+                          NSString *path = [[NSBundle mainBundle] pathForImageResource: fileName];
+                          rep = [NSImageRep imageRepWithContentsOfFile: path];
+                        }
+                      
+                      // If the representation was found, add it...
+                      if (rep != nil)
+                        {
+                          [self addRepresentation: rep];
+                        }
+                    }
+                }
+            }
         }
       if ([coder containsValueForKey: @"NSSize"])
         {
@@ -1842,40 +1887,29 @@ iterate_reps_for_types(NSArray* imageReps, SEL method)
   DESTROY(imagePasteboardTypes);
 }
 
-+ (void) _setImagePath: (NSString*)path name: (NSString*)name
+/**
+ * For all NSImage instances cached in nameDict, recompute the
+ * path using +_pathForImageNamed: and if it has changed,
+ * reload the image contents using the new path.
+ */
++ (void) _reloadCachedImages
 {
-  NSImage	*image;
+  NSString *name;
+  NSEnumerator *e;
 
   [imageLock lock];
-  image = (NSImage*)[nameDict objectForKey: name];
-  if (nil == image && nil != path)
+  e = [nameDict keyEnumerator];
+  while ((name = [e nextObject]) != nil)
     {
-      /* There was no existing image with the given name ...
-       * create a new one.
-       */
-      image = [[[[GSTheme theme] imageClass] alloc]
-	initByReferencingFile: path];
-      if (image != nil)
-	{
-	  [image setName: name];
-	  image->_flags.archiveByName = YES;
-	  AUTORELEASE(image);
-	}
-      [image setName: name];
-    }
-  else
-    {
-      if (nil == path)
-	{
-	  path = [self _pathForImageNamed: name];
-	}
-      if (path != nil && ![path isEqual: image->_fileName])
+      NSImage *image = [nameDict objectForKey: name];
+      NSString *path = [self _pathForImageNamed: name];
+      if (![path isEqual: image->_fileName])
 	{
 	  /* Reset the existing image to use the contents of
 	   * the specified file.
 	   */
 	  [image _resetAndUseFromFile: path];
-	}
+	}      
     }
   [imageLock unlock];
 }
@@ -1932,6 +1966,32 @@ iterate_reps_for_types(NSArray* imageReps, SEL method)
 				       ofType: o];
 	  if (path != nil && [path length] != 0)
 	    break;
+	}
+    }
+
+  /* If not found then search in the theme */
+  if (!path)
+    {
+      NSBundle *themeBundle = [[GSTheme theme] bundle];
+      if (ext)
+	{
+	  path = [themeBundle pathForResource: realName
+				       ofType: ext
+				  inDirectory: @"ThemeImages"];
+	}
+      else 
+	{
+	  id o, e;
+	  
+	  e = [array objectEnumerator];
+	  while ((o = [e nextObject]))
+	    {
+	      path = [themeBundle pathForResource: realName
+					   ofType: o
+				      inDirectory: @"ThemeImages"];
+	      if (path != nil && [path length] != 0)
+		break;
+	    }
 	}
     }
   

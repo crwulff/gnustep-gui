@@ -2379,6 +2379,33 @@ titleWithRepresentedFilename(NSString *representedFilename)
   return basePoint;
 }
 
+/**
+ * Converts aRect from the coordinate system of the screen
+ * to the coordinate system of the window.
+ */
+
+- (NSRect) convertRectFromScreen: (NSRect)aRect
+{
+  NSRect result = aRect;
+  NSPoint origin = result.origin;
+  NSPoint newOrigin = [self convertScreenToBase: origin];
+  result.origin = newOrigin;
+  return result;  
+}
+
+/**
+ * Converts aRect from the window coordinate system to a rect in
+ * the screen coordinate system.
+ */
+- (NSRect) convertRectToScreen: (NSRect)aRect
+{
+  NSRect result = aRect;
+  NSPoint origin = result.origin;
+  NSPoint newOrigin = [self convertBaseToScreen: origin];
+  result.origin = newOrigin;
+  return result;
+}
+
 /*
  * Managing the display
  */
@@ -5239,6 +5266,12 @@ current key view.<br />
 */
 - (void) setDelegate: (id)anObject
 {
+  if (anObject == _delegate)
+    {
+      // don't remove previously registered notifications if delegate is unchanged!
+      return;
+    }	  	 
+
   if (_delegate)
     {
       [nc removeObserver: _delegate name: nil object: self];

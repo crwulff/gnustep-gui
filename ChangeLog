@@ -1,3 +1,269 @@
+2013-04-24 05:23-EDT Gregory John Casamento <greg.casamento@gmail.com>
+
+	* Headers/AppKit/NSPopover.h: correct delegate method
+	for popoverShouldClose:
+	* Headers/AppKit/NSWindow.h: add convertRectToScreen: and
+	convertRectFromScreen: methods.
+	* Source/NSPopover.m: Correct delegate method for popoverShouldClose:.
+	Changes to align popover window with rect it is being placed relative
+	to.
+	* Source/NSWindow.m: implementation of convertRectToScreen: and
+	convertRectFromScreen: methods.
+
+2013-04-23  Fred Kiefer <FredKiefer@gmx.de>
+
+	* Source/GSXibLoader.m: Add -replaceObject:withObject: method.
+
+2013-04-21  Fred Kiefer <FredKiefer@gmx.de>
+
+	* Headers/AppKit/NSPopover.h,
+	* Source/NSPopover.m: Adjust to GNUstep coding standards.
+	* Source/externs.m: Move new strings to here.
+
+2013-04-21  Fred Kiefer <FredKiefer@gmx.de>
+
+	* Headers/AppKit/AppKit.h: Add NSCollectionView.h and NSCollectionViewItem.h.
+
+2013-04-21  Fred Kiefer <FredKiefer@gmx.de>
+
+	* Source/NSCollectionView.m (-_moveUpAndExpandSelection:): Correct
+	the comparision. Bug reported by Gregory John Casamento
+	<greg.casamento@gmail.com>
+	* Headers/AppKit/NSPopover.h: Add missing import.
+	* Source/GSXibLoader.m: Disable NSCustomView hack again.
+	* Headers/AppKit/NSApplication.h: Replace GSAppDelegateProtocol
+	with NSApplicationDelegate.
+	* Source/NSApplication.m: Adjust documentation to this replacement.
+
+
+2013-04-21 09:26-EDT Gregory John Casamento <greg.casamento@gmail.com>
+
+	* Headers/AppKit/AppKit.h: Add NSPopover.h to set of files
+	included.
+	* Headers/AppKit/NSApplication.h: Add NSApplicationDelegate.
+	Inherit from GSAppDelegateProtocol.
+	* Headers/AppKit/NSPopover.h: NSPopover header.
+	* Source/GNUmakefile: Added NSPopover.[hm]
+	* Source/GSXibLoader.m: Translate NSCustomView to NSView when
+	unarchiving.
+	* Source/NSPopover.m: Skeletal implementation of NSPopover.m.
+
+2013-04-21  Fred Kiefer <FredKiefer@gmx.de>
+
+	* Source/NSTableView.m (-selectedColumnIndexes, -selectedRowIndexes): Return an
+	autoreleased copy of the corresponding ivar. Returning a reference to the ivar
+	leads to issues (and behavior different from Cocoa) when iterating thru the
+	indexsets if at a time they would be being altered.
+	Patch by Frank LeGrand (flegrand@testplant.com).
+	* Source/GNUmakefile: Add NSCollectionViewItem.
+	* Headers/AppKit/NSCollectionView.h,
+	* Headers/AppKit/NSCollectionViewItem.h,
+	* Source/NSCollectionViewItem.m,
+	* Source/NSCollectionView.m: Bring closer to the GNUstep coding standard.
+
+2013-04-17 23:54-EDT Gregory John Casamento <greg.casamento@gmail.com>
+
+	* Headers/AppKit/NSCollectionView.h
+	* Headers/AppKit/NSCollectionViewItem.h
+	* Source/GNUmakefile
+	* Source/NSCollectionViewItem.m
+	* Source/NSCollectionView.m: Added NSCollectionView and
+	NSCollectionViewItem classes from testplant branch.  Made changes
+	to original patch to conform to coding standards, NSCoding for
+	non-keyed archiving and moved instances of float/integer to
+	CGFloat and NSInteger/NSUInteger as appropriate.
+	Patch by Doug Simons (dsimons@testplant.com) and
+	Frank LeGrand (flegrand@testplant.com).
+
+2013-04-15  Fred Kiefer <FredKiefer@gmx.de>
+
+	* Headers/AppKit/NSKeyValueBinding.h,
+	* Source/externs.m: Additional binding name NSContentValuesBinding.
+	* Source/NSPopUpButton.m: Add KVB for NSContentValuesBinding.
+	Patch by Marcian Lytwyn <marcian.lytwyn@advcsi.com>
+	* Source/NSArrayController.m: Encode/decode clearsFilterPredicateOnInsertion.
+
+2013-04-06  Eric Wasylishen <ewasylishen@gmail.com>
+
+	* Source/GSTheme.m:
+	* Source/NSImage.m: Revert previous commit and write a much cleaner
+	implementation that fixes the same bug.
+
+	I removed the step in theme activation where we call
+	+[NSImage _setImagePath:name:] on each image in the theme, and instead
+	modified +[NSImage _pathForImageNamed:] to also search the theme images
+	directory.
+
+	When a GSTheme activates now, it only calls +[NSImage _reloadCachedImages]
+	which checks all NSImage cached by name and reloads any whose path has
+	changed.
+
+2013-04-06  Eric Wasylishen <ewasylishen@gmail.com>
+
+	* Source/GSTheme.m:
+	* Source/NSImage.m: Allow themes to override only a "base" image like
+	common_3DArrowRight and have images that map to it (NSMenuArrow)
+	automatically update.
+
+2013-04-03  Fred Kiefer <FredKiefer@gmx.de>
+
+	* Tools/speech/GSSpeechSynthesizer.m: Use object_getClass()
+	instead of isa. Make exitIfUnneeded: a class method. Reformat code.
+
+2013-04-03  Fred Kiefer <FredKiefer@gmx.de>
+
+	* Source/NSBitmapImageRep+GIF.m (-_bitmapIsGIF:): Prepare for
+	additional argument to function DGifOpen in newer libgif versions.
+
+2013-03-28  Richard Frith-Macdonald <rfm@gnu.org>
+
+        Make release
+        * Version 0.23.1
+        * Update release notes
+
+2013-03-20  Fred Kiefer <FredKiefer@gmx.de>
+
+	* Source/GSToolTips.m (+initialize): Set the level of the tool tip
+	window to NSPopUpMenuWindowLevel.
+	Change suggested by Wolfgang Lux  <wolfgang.lux@gmail.com>
+
+2013-03-18  Fred Kiefer <FredKiefer@gmx.de>
+
+	* Tests/gui/NSImage/basic.m: Add basic tests for NSImage.
+	* Tests/gui/NSCell/basic.m: Extend basic tests for NSCell.
+	* Source/NSImage.m: Try to correct keyed encoding/decoding. Add
+	incomplete isEqual: method.
+
+2013-03-17  Fred Kiefer <FredKiefer@gmx.de>
+
+	* Source/NSViewController.m: Retain the view.
+	* Source/NSOutline.m(-drawRow:clipRect:): The selected cell shows
+	its first responder state.
+	Patch by Frank LeGrand <frank.legrand@testplant.com>
+
+2013-03-17  Fred Kiefer <FredKiefer@gmx.de>
+
+	* Source/NSEvent.m,
+	* Source/NSParagraphStyle.m: Use NSInteger instead of enumerator
+	type name for decoding and encoding.
+	* Header/AppKit/NSFontPanel.h,
+	* Header/AppKit/NSOpenPanel.h,
+	* Header/AppKit/NSDataLinkPanel.h,
+	* Source/NSDataLinkPanel.m,
+	* Header/AppKit/NSForm.h,
+	* Source/NSForm.m,
+	* Header/AppKit/NSHelpPanel.h,
+	* Source/NSHelpPanel.m,
+	* Source/NSColorPanel.m: Remove unused encoding/decoding methods.
+	* Source/NSCustomImageRep.m,
+	* Source/NSEPSImageRep.m,
+	* Source/NSMovie.m,
+	* Source/NSRulerMarker.m,
+	* Source/NSColorList.m: Flag missing keyed encoding/decoding.
+
+2013-03-15  Fred Kiefer <FredKiefer@gmx.de>
+
+	* Source/NSTableView.m: Use new method -_isCellSelectableColumn:row:,
+	that checks the cells selectable state, in -mouseDown:.
+
+2013-03-10  Fred Kiefer <FredKiefer@gmx.de>
+
+	* Source/GSNibLoading.m (NSCustomView -nibInstantiateWithCoder:):
+	Re-add call to -replaceObject:withObject: on decoder, but this
+	time in the right place.
+
+2013-03-09  Eric Wasylishen  <ewasylishen@gmail.com>
+
+	* Images/GNUmakefile:
+	* Images/nsmapping.strings:
+	* Images/common_Info.svg:
+	* Images/common_Info.tiff: Add NSInfo image.
+
+2013-03-08  Fred Kiefer <FredKiefer@gmx.de>
+
+	* Tests/gui/NSSavePanel/setDelegate_reload.m: Rewrite to remove
+	use of @defs().
+	Base on idea by Wolfgang Lux  <wolfgang.lux@gmail.com>
+
+2013-03-08  Fred Kiefer <FredKiefer@gmx.de>
+
+	* Source/NSTableColumn.m (-initWithCoder:): Make columns
+	non-editable by default.
+	* Source/NSTableView.m (-editColumn:...select:): Make editing here
+	independ of the datasource.
+	* Source/NSTableView.m: Split -_isCellEditableColumn:row: in two
+	methods and ignore the cell isEditable state in -mouseDown:.
+
+2013-03-08  Fred Kiefer <FredKiefer@gmx.de>
+
+	* Headers/AppKit/NSTextView.h: Make NSTextViewDelegate a formal protocol.
+
+2013-03-08  Fred Kiefer <FredKiefer@gmx.de>
+
+	* configure.ac: Correct change for libpng.
+	Patch by Sebastian Reitenbach <sebastia@l00-bugdead-prods.de>
+	* configure: Regenerated.
+
+2013-03-08  Fred Kiefer <FredKiefer@gmx.de>
+
+	* Source/NSBezierPath.m (-elementAtIndex:associatedPoints:): Fix
+	handling of close element.
+	Patch by Bluna Ratimonkey <object@gmail.com>.
+
+2013-03-05  Fred Kiefer <FredKiefer@gmx.de>
+
+	* Source/GSHorizontalTypesetter.m: Change floats into CGFloats to
+	stop infinite loop.
+
+2013-03-04  Fred Kiefer <FredKiefer@gmx.de>
+
+	* configure.ac: Use CPPFLAGS instead of CFLAGS for libpng.
+	Patch by Sebastian Reitenbach <sebastia@l00-bugdead-prods.de>
+	* configure: Regenerated.
+
+2013-03-04  Fred Kiefer <FredKiefer@gmx.de>
+
+	* Source/NSBezierPath.m: Implement keyed coding and complete keyed
+	decoding.
+	Patch by Christopher Armstrong <carmstrong@fastmail.com.au>
+	* Source/NSBezierPath.m: Rewrote -elementAtIndex:associatedPoints:
+	to return a point for NSClosePathBezierPathElement. And adjust all
+	callers to make use of that point. Complete non-keyed coding and
+	decoding.
+	* Tests/gui/NSBezierPath/basic.m: Add basic tests for NSBezierPath.
+
+2013-03-02 Sebastian Reitenbach <sebastia@l00-bugdead-prods.de>
+
+	* Source/NSMenuItemCell.m
+	* Headers/AppKit/NSMenuItemCell.h
+	  float -> CGFloat transitions
+	* ColorPickers/GSColorSliderCell.m
+	  more float -> CGFloat transitions
+	* Headers/AppKit/NSOutlineView.h
+	  int -> NSInteger transitions for NSOutlineView protocol
+
+2013-03-01  Richard Frith-Macdonald <rfm@gnu.org>
+
+        * Version ... bump subminor number in preparation for next release.
+
+2013-03-01  Richard Frith-Macdonald <rfm@gnu.org>
+
+        Make release
+	* Version 0.23.0
+	* Update release notes
+
+2013-02-28  Eric Wasylishen  <ewasylishen@gmail.com>
+
+	* Source/GSPDFPrintOperation.m: Update -_print and -deliverResult
+	to match GSEPSPrintOperation to get the class to at least partly
+	working. Output is appearing up-side-down for me though.
+
+2013-02-23  Fred Kiefer <FredKiefer@gmx.de>
+
+	* Source/NSWindow.m (-setDelegate:): Don't unregister delegate
+	notifications if same delegate is set twice.
+	Patch by Doug Simons <doug.simons@testplant.com>
+
 2013-02-22  Fred Kiefer <FredKiefer@gmx.de>
 
 	* Source/NSWindow.m (-initWithCoder:),
@@ -42,13 +308,15 @@
 2013-02-19  Quentin Mathe <quentin.mathe@gmail.com>
 
 	* Source/NSTableView.m (-_drawDropIndicator,
-	-_setDropOperationAndRow:usingPositionInRow:atPoint:, -draggingUpdated:):
+	-_setDropOperationAndRow:usingPositionInRow:atPoint:,
+        -draggingUpdated:):
 	Cleaned code a bit more.
 
 2013-02-19  Quentin Mathe <quentin.mathe@gmail.com>
 
-	* Source/NSTableView.m (-draggingUpdated:): Don't update the drop row and
-	operation if the drop target hasn't changed (this prevents to overwrite a
+	* Source/NSTableView.m (-draggingUpdated:):
+        Don't update the drop row and operation if the drop target hasn't
+        changed (this prevents to overwrite a
 	custom drop row and operation set by the user in
 	-tableView:handleValidateDrop:proposedRow:proposedOperation:).
 
@@ -59,7 +327,8 @@
 
 2013-02-19  Quentin Mathe <quentin.mathe@gmail.com>
 
-	* Source/NSTableView.m (-draggingUpdated:): Modularized the first part of
+	* Source/NSTableView.m (-draggingUpdated:):
+        Modularized the first part of
 	the method into several smaller methods -_dropRowFromQuarterPosition:,
 	-_setDropOperationAndRow:usingPositionInRow:atPoint: and
 	_scrollRowAtPointToVisible:.
@@ -67,7 +336,8 @@
 2013-02-18 Riccardo Mottola <rm@gnu.org>
 
 	* Tools/make_services.m (main)
-	Check Library directory before checking and attempting to create Services subdir
+	Check Library directory before checking and attempting to create
+        Services subdir
 
 2013-02-18  Fred Kiefer <FredKiefer@gmx.de>
 
@@ -199,7 +469,8 @@
 	* Source/GSXibLoader.m (GSXibKeyedUnarchiver -_preProcessXib:):
 	Release the document.
 	Patch by Doug Simons <doug.simons@testplant.com>
-	* Source/GSXibLoader.m: Fix a problem where owner, firstResponder and application
+	* Source/GSXibLoader.m: Fix a problem where owner,
+        firstResponder and application
  	were put in the list of top-level objects, creating a retain-cycle.
 	* Source/NSViewController.m: Fix a problem where view controllers
 	did not release their top-level objects as expected.
@@ -276,7 +547,8 @@
 
 	* Source/NSView.m (-encodeWithCoder:): Fixed to encode the superview
 	conditionally as Cocoa does (Apple discusses superview encoding as a
-	use case for conditional encoding in the Archiving related documentation).
+	use case for conditional encoding in the Archiving related
+        documentation).
 	View can now be archived (or copied) without having to remove the view
 	from its hierarchy before archiving it.
 
@@ -368,7 +640,8 @@
 	* Source/NSTextView.m
 	* Source/NSWindow.m
 	* Source/NSWorkspace.m
-	* Tools/make_services.m: Fix all current compiler warnings on FreeBSD/x86-64.
+	* Tools/make_services.m:
+        Fix all current compiler warnings on FreeBSD/x86-64.
 
 2013-01-30  Fred Kiefer <FredKiefer@gmx.de>
 
@@ -480,9 +753,11 @@
 
 	* Headers/Additions/GNUstepGUI/GSLayoutManager_internal.h: Make
 	-_invalidateEverything visible.
-	* Source/GSLayoutManager.m (-invalidateGlyphsForCharacterRange:...): Call
+	* Source/GSLayoutManager.m (-invalidateGlyphsForCharacterRange:...):
+        Call
 	-_invalidateEverything when the whole character range is invalidated.
-	* Source/NSStringDrawing.m: Remove workarounds for full layout invalidation.
+	* Source/NSStringDrawing.m:
+        Remove workarounds for full layout invalidation.
 	Move initialisation check into cache_lock().
 	Extract size match code in function.
 	Put #ifdef around all statistics code.
@@ -499,7 +774,8 @@
 	initWithCoder so that it may marshall the pixel attributes prior to
 	initWithAttributes:. Change the getValues:... method to take an
 	int argument instead of long. GLint is mapped to int on most systems.
-	* Source/NSOpenGLContext.m: Use the format decoding to decode an OpenGL context.
+	* Source/NSOpenGLContext.m:
+        Use the format decoding to decode an OpenGL context.
 	Patch by Clint Smullen <daemonae>.
 
 	* Source/GSLayoutManager.m: Small cleanup in glyph code.
@@ -520,7 +796,8 @@
 	orderFrontCharacterPalette:] and do nothing instead of throwing a
 	run-time exception.
 	* Source/NSTextView.m (-_stopInsertionTimer, -_startInsertionTimer):
-	Extract this helper methods from -updateInsertionPointStateAndRestartTimer:.
+	Extract this helper methods from
+        -updateInsertionPointStateAndRestartTimer:.
 	* Source/NSTextView.m (-cleanUpAfterDragOperation): Add cleanup code to
 	cleanUpAfterDragOperation. Gets invoked from concludeDragOperation:.
 	Fix drag and drop of file objects.
@@ -550,7 +827,8 @@
 
 2012-10-31  Fred Kiefer <FredKiefer@gmx.de>
 
-	* Source/NSTabView.m (-dealloc): Reset _selected to nil at top of dealloc.
+	* Source/NSTabView.m (-dealloc):
+        Reset _selected to nil at top of dealloc.
 	* Source/NSBox.m(-drawRect:, -initWithCoder:): Implement
 	transparent handling for custom boxes.
 	Patch by Marcian Lytwyn <marcian.lytwyn@advcsi.com>
@@ -614,7 +892,8 @@
 	* Headers/AppKit/NSTextStorage.h,
 	* Source/NSTextStorage.m: Add font/setFont methods to NSTextStorage
 	Patch by Marcian Lytwyn <marcian.lytwyn@advcsi.com>
-        * NSWindow.m (-center): Center on the main screen if window is off screen.
+        * NSWindow.m (-center):
+        Center on the main screen if window is off screen.
 	Patch by Doug Simons <doug.simons@testplant.com>
 
 2012-10-12  Fred Kiefer <FredKiefer@gmx.de>
