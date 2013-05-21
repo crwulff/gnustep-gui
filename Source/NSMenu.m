@@ -828,6 +828,14 @@ static BOOL menuBarVisible = YES;
   [self menuChanged];
 }
 
+- (void) removeAllItems
+{
+  while ([_items count] != 0)
+  {
+    [self removeItemAtIndex: 0];
+  }
+}
+
 - (void) itemChanged: (id <NSMenuItem>)anObject
 {
   NSNotification *changed;
@@ -907,6 +915,11 @@ static BOOL menuBarVisible = YES;
 - (NSArray*) itemArray
 {
   return (NSArray*)_items;
+}
+
+- (NSMenuProperties)propertiesToUpdate
+{
+  return 63; // TODO - For now return all property types
 }
 
 /*

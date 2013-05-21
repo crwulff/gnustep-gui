@@ -46,6 +46,16 @@
 @class NSWindow;
 @class NSMutableArray;
 
+enum {
+   NSMenuPropertyItemTitle                    = 1,
+   NSMenuPropertyItemAttributedTitle          = 2,
+   NSMenuPropertyItemKeyEquivalent            = 4,
+   NSMenuPropertyItemImage                    = 8,
+   NSMenuPropertyItemEnabled                  = 16,
+   NSMenuPropertyItemAccessibilityDescription = 32
+};
+typedef NSUInteger NSMenuProperties;
+
 /* ******************* */
 /* NSMenuView Protocol */
 /* ******************* */
@@ -498,6 +508,8 @@
  */
 - (NSArray*) itemArray;
 
+- (NSMenuProperties) propertiesToUpdate;
+
 /** Returns an item located at index.
  */
 - (id <NSMenuItem>) itemAtIndex: (NSInteger)index;
@@ -567,6 +579,8 @@
 /** Removes item at position index.
  */
 - (void) removeItemAtIndex: (NSInteger)index;
+
+- (void) removeAllItems;
 
 /** Sets if a menu does autoenable.
  */
