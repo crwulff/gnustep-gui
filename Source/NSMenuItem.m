@@ -460,6 +460,11 @@ static Class imageClass;
   return _enabled;
 }
 
+- (void) setHidden: (BOOL)flag
+{
+  // TODO
+}
+
 - (void) setTarget: (id)anObject
 {
   if (_target == anObject)

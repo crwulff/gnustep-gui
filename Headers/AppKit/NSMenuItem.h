@@ -211,6 +211,8 @@
  */
 - (void) setEnabled: (BOOL)flag;
 
+- (void) setHidden: (BOOL)flag;
+
 /**
    <p>
    Sets the image to be displayed in the receiver.
