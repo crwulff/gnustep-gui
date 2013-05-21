@@ -41,6 +41,7 @@
 #import <Foundation/NSURL.h>
 #import <Foundation/NSUserDefaults.h>
 #import <Foundation/NSKeyValueCoding.h>
+#import <Foundation/NSFileManager.h>
 #import "AppKit/NSControl.h"
 #import "AppKit/NSNib.h"
 #import "AppKit/NSNibConnector.h"
@@ -277,6 +278,34 @@
   return [bundle loadNibFile: aNibName
 	   externalNameTable: table
 		    withZone: [owner zone]];
+}
+
+- (NSImage *)imageForResource:(NSString *)name
+{
+  NSImage *image = [[NSImage alloc] init];
+
+  if (image == nil) return nil;
+
+  NSString *path = [self resourcePath];
+
+  NSArray *files = [[NSFileManager defaultManager] contentsOfDirectoryAtPath: path error: nil];
+
+  if (files == nil) return nil;
+
+  for (id f in files)
+  {
+    NSString *file = (NSString*)f;
+    NSRange range = [file rangeOfString: name];
+    if (range.location == 0)
+    {
+      NSArray *array = [NSImageRep imageRepsWithContentsOfFile: [path stringByAppendingPathComponent: file]];
+      if (!array) continue;
+  
+      [image addRepresentations: array];
+    }
+  }
+
+  return image;
 }
 
 - (NSString *) pathForNibResource: (NSString *)fileName

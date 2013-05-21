@@ -34,6 +34,7 @@
 #import <Foundation/NSObject.h>
 #import <Foundation/NSBundle.h>
 #import <Foundation/NSZone.h>
+#import <AppKit/NSImage.h>
 
 @class NSString;
 @class NSDictionary;
@@ -61,6 +62,8 @@
 - (BOOL) loadNibFile: (NSString *)fileName
    externalNameTable: (NSDictionary *)context
 	    withZone: (NSZone *)zone;
+
+- (NSImage *)imageForResource:(NSString *)name;
 
 #if OS_API_VERSION(GS_API_NONE, GS_API_NONE)
 - (NSString *) pathForNibResource: (NSString *)fileName;
