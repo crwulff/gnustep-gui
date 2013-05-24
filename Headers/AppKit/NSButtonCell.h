@@ -196,6 +196,7 @@ typedef enum _NSGradientType {
 //
 - (BOOL)isTransparent;
 - (void)setTransparent: (BOOL)flag;
+- (void)setExternal: (BOOL)flag;
 #if OS_API_VERSION(GS_API_MACOSX, GS_API_LATEST)
 - (NSBezelStyle)bezelStyle;
 - (void)setBezelStyle: (NSBezelStyle)bezelStyle;

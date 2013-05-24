@@ -39,6 +39,7 @@
 
 #import <AppKit/NSGraphicsContext.h>
 #import <AppKit/NSResponder.h>
+#import <AppKit/NSAnimation.h>
 
 @class NSArray;
 @class NSData;
@@ -181,7 +182,7 @@ APPKIT_EXPORT NSSize NSTokenSize;
  * -convertBaseToScreen: and -convertScreenToBase: methods.
  * </p>
  */
-@interface NSWindow : NSResponder <NSCoding>
+@interface NSWindow : NSResponder <NSCoding, NSAnimatablePropertyContainer>
 {
   NSRect        _frame;
   NSSize        _minimumSize;
@@ -721,6 +722,8 @@ PACKAGE_SCOPE
 #if OS_API_VERSION(MAC_OS_X_VERSION_10_2, GS_API_LATEST)
 - (void) invalidateShadow;
 #endif
+- (NSUInteger) styleMask;
+- (void) setStyleMask: (NSUInteger)styleMask;
 
 /*
  * Services menu support

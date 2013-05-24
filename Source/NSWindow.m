@@ -1312,6 +1312,16 @@ titleWithRepresentedFilename(NSString *representedFilename)
   return _styleMask;
 }
 
+- (void) setStyleMask: (NSUInteger)styleMask
+{
+  _styleMask = styleMask;
+}
+
+- (void)setAnimations:(NSDictionary *)animations
+{
+  // TODO
+}
+
 /** Returns an NSString containing the text of the window's title. */
 - (NSString*) title
 {

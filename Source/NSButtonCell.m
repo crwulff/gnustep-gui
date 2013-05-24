@@ -679,6 +679,11 @@ typedef struct _GSButtonCellFlags
   _buttoncell_is_transparent = flag;
 }
 
+- (void)setExternal: (BOOL)flag
+{
+  // TODO
+}
+
 /**<p>Returns whether the NSButtonCell is opaque. Returns YES if the button 
    cell is not transparent and if the cell is bordered and if there is no
    bezel style, NO otherwise</p>

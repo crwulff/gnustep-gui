@@ -36,6 +36,7 @@
 
 #import <AppKit/NSGraphicsContext.h>
 #import <AppKit/NSResponder.h>
+#import <AppKit/NSAnimation.h>
 
 @class NSArray;
 @class NSAttributedString;
@@ -96,7 +97,7 @@ typedef enum _NSFocusRingType {
   NSFocusRingTypeExterior = 2
 } NSFocusRingType;
 
-@interface NSView : NSResponder
+@interface NSView : NSResponder <NSAnimatablePropertyContainer>
 {
   NSRect _frame;
   NSRect _bounds;
@@ -308,6 +309,8 @@ PACKAGE_SCOPE
 - (void) setKeyboardFocusRingNeedsDisplayInRect: (NSRect)rect;
 - (void) setFocusRingType: (NSFocusRingType)focusRingType;
 - (NSFocusRingType) focusRingType;
+- (BOOL) wantsLayer;
+- (void) setWantsLayer: (BOOL)layer;
 
 /*
  * Hidding Views

@@ -320,6 +320,16 @@ APPKIT_EXPORT NSString *NSViewAnimationFadeOutEffect;
 
 @end
 
+@protocol NSAnimatablePropertyContainer
+
+- (id)animator;
+- (NSDictionary *)animations;
+- (void)setAnimations:(NSDictionary *)animations;
+- (id)animationForKey:(NSString *)key;
++ (id)defaultAnimationForKey:(NSString *)key;
+
+@end
+
 #endif /* OS_API_VERSION */
 
 #endif /* _GNUstep_H_NSAnimation_ */

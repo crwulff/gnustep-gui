@@ -2890,6 +2890,22 @@ in the main thread.
   return _focusRingType;
 }
 
+- (BOOL) wantsLayer
+{
+  // TODO
+  return false;
+}
+
+- (void) setWantsLayer: (BOOL)layer
+{
+  // TODO
+}
+
+- (void)setAnimations:(NSDictionary *)animations
+{
+  // TODO
+}
+
 /*
  * Hidding Views
  */
