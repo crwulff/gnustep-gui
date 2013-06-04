@@ -121,6 +121,9 @@ PACKAGE_SCOPE
   void *_nextKeyView;
   void *_previousKeyView;
 
+  id _animator;
+  NSDictionary *_animationsDictionary;
+
 @public
   /*
    * Flags for internal use by NSView and it's subclasses.
@@ -311,6 +314,16 @@ PACKAGE_SCOPE
 - (NSFocusRingType) focusRingType;
 - (BOOL) wantsLayer;
 - (void) setWantsLayer: (BOOL)layer;
+
+/*
+ * Animation
+ */
+- (id) animator;
+- (Class) _animatorClass;
+- (NSDictionary*) animations;
+- (void) setAnimations: (NSDictionary*)animations;
+- (id) animationForKey: (NSString*)key;
++ (id) defaultAnimationForKey: (NSString*)key;
 
 /*
  * Hidding Views

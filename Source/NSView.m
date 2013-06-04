@@ -79,6 +79,8 @@
 #import "GSGuiPrivate.h"
 #import "NSViewPrivate.h"
 
+#include <objc/runtime.h>
+
 /*
  * We need a fast array that can store objects without retain/release ...
  */
@@ -98,6 +100,58 @@
    a class variable because we want it visible to subviews also
 */
 NSView *viewIsPrinting = nil;
+
+@interface NSObjectAnimator : NSObject
+{
+  id _target;
+}
+
+- (id) initWithTarget: (id) target;
+
++ (Class) _animatorClassForTargetClass: (Class) c;
+
+@end
+
+@implementation NSObjectAnimator
+
+- (id) initWithTarget: (id) target
+{
+  _target = target;
+  return self;
+}
+
++ (Class) _animatorClassForTargetClass: (Class) c
+{
+  NSString *className = [NSString stringWithFormat: @"%@_%@", NSStringFromClass([self class]), NSStringFromClass(c)];
+  Class animator = NSClassFromString(className);
+  if (!animator)
+    {
+      animator = objc_allocateClassPair([self class], [className UTF8String], 0);
+      objc_registerClassPair(animator);
+    }
+
+  return animator;
+}
+
+@end
+
+@interface NSViewAnimator : NSObjectAnimator
+
+- (void) replaceSubview: (NSView*)oldView
+		   with: (NSView*)newView;
+
+@end
+
+@implementation NSViewAnimator
+
+- (void) replaceSubview: (NSView*)oldView
+		   with: (NSView*)newView
+{
+  /* TODO: This should animate instead of immediately replacing */
+  [_target replaceSubview: oldView with: newView];
+}
+
+@end
 
 /**
   <unit>
@@ -2901,9 +2955,57 @@ in the main thread.
   // TODO
 }
 
-- (void)setAnimations:(NSDictionary *)animations
+
+- (id) animator
+{
+  if (!_animator)
+    {
+      _animator = [[[self _animatorClass] alloc] initWithTarget: self];
+    }
+
+  return _animator;
+}
+
+- (Class) _animatorClass
+{
+  return [NSViewAnimator _animatorClassForTargetClass: [self class]];
+}
+
+- (NSDictionary *)animations
+{
+  return _animationsDictionary;
+}
+
+- (void) setAnimations: (NSDictionary*)animations
+{
+  if (animations != _animationsDictionary)
+    {
+      if (_animationsDictionary) [_animationsDictionary release];
+      _animationsDictionary = [animations copy];
+    }
+}
+
+- (id) animationForKey: (NSString*)key
+{
+  id animation = nil;
+  if (_animationsDictionary)
+    {
+      animation = [_animationsDictionary objectForKey: key];
+    }
+
+  if (!animation)
+    {
+      animation = [[self class] defaultAnimationForKey: key];
+    }
+
+  return animation;
+}
+
++ (id) defaultAnimationForKey: (NSString*)key
 {
   // TODO
+  NSLog(@"NSView defaultAnimationForKey: %@ - Not implemented\n", key);
+  return nil;
 }
 
 /*
