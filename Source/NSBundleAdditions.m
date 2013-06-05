@@ -42,6 +42,7 @@
 #import <Foundation/NSUserDefaults.h>
 #import <Foundation/NSKeyValueCoding.h>
 #import <Foundation/NSFileManager.h>
+#import <Foundation/NSThread.h>
 #import "AppKit/NSControl.h"
 #import "AppKit/NSNib.h"
 #import "AppKit/NSNibConnector.h"
@@ -228,16 +229,46 @@
 @end
 
 @implementation NSBundle (NSBundleAdditions)
-+ (BOOL) loadNibFile: (NSString*)fileName
-   externalNameTable: (NSDictionary*)context
-	    withZone: (NSZone*)zone
++ (BOOL) _loadNibFile: (NSString*)fileName
+            nameTable: (NSDictionary*)context
+	     withZone: (NSZone*)zone
+	  ownerBundle: (NSBundle*)owner
 {
+  if (owner != nil)
+    {
+      [NSBundle pushNibLoadingBundle: owner];
+    }
+
   NSNib *nib = [[NSNib alloc] initWithContentsOfURL: [NSURL fileURLWithPath: fileName]];
   BOOL loaded = [nib instantiateNibWithExternalNameTable: context
                                                 withZone: zone];
 
   RELEASE(nib);
+
+  if (owner != nil)
+    {
+      [NSBundle popNibLoadingBundle];
+    }
+
   return loaded;
+}
+
++ (BOOL) loadNibFile: (NSString*)fileName
+   externalNameTable: (NSDictionary*)context
+	    withZone: (NSZone*)zone
+{
+  NSBundle *ownerBundle = nil;
+  id owner = [context objectForKey: NSNibOwner];
+  if (owner != nil)
+    {
+      ownerBundle = [NSBundle bundleForClass: [owner class]];
+    }
+  else
+    {
+      ownerBundle = [NSBundle mainBundle];
+    }
+
+  return [NSBundle _loadNibFile: fileName nameTable: context withZone: zone ownerBundle: ownerBundle];
 }
 
 + (BOOL) loadNibNamed: (NSString *)aNibName
@@ -368,14 +399,54 @@
 
   if (path != nil)
     {
-      return [NSBundle loadNibFile: path
-		 externalNameTable: context
-			  withZone: (NSZone*)zone];
+      return [NSBundle _loadNibFile: path
+	                  nameTable: context
+                           withZone: (NSZone*)zone
+                        ownerBundle: self];
     }
   else 
     {
       return NO;
     }
+}
+
+static NSMutableArray * _NSNibLoadingBundles(void)
+{
+  NSMutableDictionary *threadDict = [[NSThread currentThread] threadDictionary];
+  NSMutableArray *nibStack = [threadDict objectForKey: @"nibLoadingBundles"];
+
+  if (nibStack == nil)
+    {
+      nibStack = [[NSMutableArray alloc] init];
+      [threadDict setObject: nibStack forKey: @"nibLoadingBundles"];
+    }
+
+  return nibStack;
+}
+
++ (void) pushNibLoadingBundle: (NSBundle*)bundle
+{
+  NSMutableArray *nibStack = _NSNibLoadingBundles();
+  [nibStack addObject: bundle];
+}
+
++ (void) popNibLoadingBundle
+{
+  NSMutableArray *nibStack = _NSNibLoadingBundles();
+  [nibStack removeLastObject];
+}
+
++ (NSBundle*) currentNibLoadingBundle
+{
+  NSMutableArray *nibStack = _NSNibLoadingBundles();
+  NSBundle *nibStackTop = nil;
+
+  if ([nibStack count] > 0)
+    {
+      nibStackTop = [nibStack objectAtIndex: [nibStack count] - 1];
+    }
+
+  return nibStackTop;
 }
 @end
 // end of NSBundleAdditions

@@ -1205,6 +1205,16 @@ static BOOL _isInInterfaceBuilder = NO;
                    NSStringFromClass([coder class])];
     }
 }
+
++ (void) pushBundleForImageSearch: (NSBundle*)bundle
+{
+  [NSBundle pushNibLoadingBundle: bundle];
+}
+
++ (void) popBundleForImageSearch
+{
+  [NSBundle popNibLoadingBundle];
+}
 @end
 
 /**
@@ -1246,7 +1256,7 @@ static BOOL _isInInterfaceBuilder = NO;
         }
       else if ([_className isEqual: @"NSImage"])
         {
-          realObject = RETAIN([NSImage imageNamed: _resourceName]);
+          realObject = RETAIN([self loadImageWithName: _resourceName]);
         }
 
       if (realObject == nil)
@@ -1282,6 +1292,34 @@ static BOOL _isInInterfaceBuilder = NO;
       [coder encodeObject: (id)_className forKey: @"NSClassName"];
       [coder encodeObject: (id)_resourceName forKey: @"NSResourceName"];
     }
+}
+
+- (NSImage*) _loadImageWithName: (NSString*)imageName
+{
+  NSImage *image = [NSImage imageNamed: _resourceName];
+
+  if (image == nil)
+    {
+      NSBundle *nibBundle = [NSBundle currentNibLoadingBundle];
+      if (nibBundle != nil)
+        {
+          image = [nibBundle imageForResource: imageName];
+        }
+    }
+
+  return image;
+}
+
+- (NSImage*) loadImageWithName: (NSString*)imageName
+{
+  NSImage *image = [self _loadImageWithName: imageName];
+  if (image == nil)
+    {
+      NSLog(@"Could not load NSCustomResource %@", imageName);
+      image = [NSImage imageNamed: @"GNUStep"];
+    }
+
+  return image;
 }
 @end
 

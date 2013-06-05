@@ -46,6 +46,7 @@
 #import "GNUstepGUI/GSNibContainer.h"
 #import "GNUstepGUI/GSInstantiator.h"
 
+@class NSBundle;
 @class NSDictionary;
 @class NSMapTable;
 @class NSMutableArray;
@@ -238,6 +239,11 @@ typedef struct _GSWindowTemplateFlags
 - (NSString *)className;
 - (void) setResourceName: (NSString *)view;
 - (NSString *)resourceName;
+
+- (NSImage*) _loadImageWithName: (NSString*)imageName;
+- (NSImage*) loadImageWithName: (NSString*)imageName;
++ (void) pushBundleForImageSearch: (NSBundle*)bundle;
++ (void) popBundleForImageSearch;
 @end
 
 @interface NSClassSwapper : NSObject <NSCoding>

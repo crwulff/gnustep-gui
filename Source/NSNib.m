@@ -150,9 +150,26 @@
 - (BOOL)instantiateNibWithExternalNameTable: (NSDictionary *)externalNameTable
 				   withZone: (NSZone *)zone
 {
-  return [_loader loadModelData: _nibData 
-		  externalNameTable: externalNameTable
-		  withZone: zone];
+  NSBundle *ownerBundle = nil;
+  id owner = [externalNameTable objectForKey: NSNibOwner];
+  if (owner != nil)
+    {
+      ownerBundle = [NSBundle bundleForClass: [owner class]];
+    }
+  else
+    {
+      ownerBundle = [NSBundle mainBundle];
+    }
+
+  [NSBundle pushNibLoadingBundle: ownerBundle];
+
+  BOOL result = [_loader loadModelData: _nibData 
+		     externalNameTable: externalNameTable
+		              withZone: zone];
+
+  [NSBundle popNibLoadingBundle];
+
+  return result;
 }
 
 /**
