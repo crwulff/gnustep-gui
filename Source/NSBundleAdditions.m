@@ -329,10 +329,13 @@
     NSRange range = [file rangeOfString: name];
     if (range.location == 0)
     {
-      NSArray *array = [NSImageRep imageRepsWithContentsOfFile: [path stringByAppendingPathComponent: file]];
-      if (!array) continue;
+      if (([file characterAtIndex: range.length] == '.') || ([file characterAtIndex: range.length] == '@'))
+      {
+        NSArray *array = [NSImageRep imageRepsWithContentsOfFile: [path stringByAppendingPathComponent: file]];
+        if (!array) continue;
   
-      [image addRepresentations: array];
+        [image addRepresentations: array];
+      }
     }
   }
 
