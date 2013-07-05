@@ -2122,8 +2122,9 @@ static void autoresize(CGFloat oldContainerSize,
 {
   NSRect wrect;
   NSInteger window_gstate = 0;
+  bool printing = (viewIsPrinting != nil) && [self isDescendantOf: viewIsPrinting];
 
-  if (viewIsPrinting == nil)
+  if (!printing)
     {
       NSAssert(_window != nil, NSInternalInconsistencyException);
       /* Check for deferred window */
@@ -2135,7 +2136,7 @@ static void autoresize(CGFloat oldContainerSize,
 
   if (ctxt == nil)
     {
-      if (viewIsPrinting != nil)
+      if (printing)
         {
           NSPrintOperation *printOp = [NSPrintOperation currentOperation];
 
@@ -2159,7 +2160,7 @@ static void autoresize(CGFloat oldContainerSize,
 	      NSStringFromRect(wrect),
 	      self, _window, NSStringFromRect([_window frame]),
 	      NSStringFromRect(_frame), [self isFlipped]);
-  if (viewIsPrinting == nil)
+  if (!printing)
     {
       [_window->_rectsBeingDrawn addObject: [NSValue valueWithRect: wrect]];
     }
@@ -2167,7 +2168,7 @@ static void autoresize(CGFloat oldContainerSize,
   /* Make sure we don't modify superview's gstate */
   DPSgsave(ctxt);
 
-  if (viewIsPrinting != nil)
+  if (printing)
     {
       if (viewIsPrinting == self)
         {
@@ -2270,11 +2271,12 @@ static void autoresize(CGFloat oldContainerSize,
 - (void) unlockFocusNeedsFlush: (BOOL)flush
 {
   NSGraphicsContext *ctxt = GSCurrentContext();
+  bool printing = (viewIsPrinting != nil) && [self isDescendantOf: viewIsPrinting];
 
   NSDebugLLog(@"NSView_details", @"-unlockFocusNeedsFlush: %i for view %@\n",
 	      flush, self);
 
-  if (viewIsPrinting == nil)
+  if (!printing)
     {
       NSAssert(_window != nil, NSInternalInconsistencyException);
       /* Check for deferred window */
@@ -2290,7 +2292,7 @@ static void autoresize(CGFloat oldContainerSize,
   if (!_allocate_gstate)
     _gstate = 0;
 
-  if (viewIsPrinting == nil)
+  if (!printing)
     {
       NSRect        rect;
       if (flush && !_rFlags.ignores_backing)
