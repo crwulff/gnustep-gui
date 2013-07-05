@@ -2773,19 +2773,23 @@ static void autoresize(CGFloat oldContainerSize,
 - (void) cacheDisplayInRect: (NSRect)rect 
            toBitmapImageRep: (NSBitmapImageRep *)bitmap
 {
-  NSDictionary *dict;
-  NSData *imageData;
 
-  [self lockFocus];
-  dict = [GSCurrentContext() GSReadRect: rect];
-  [self unlockFocus];
-  imageData = [dict objectForKey: @"Data"];
+  memset([bitmap bitmapData], 0x00, [bitmap bytesPerPlane] * [bitmap numberOfPlanes]);
 
-  if (imageData != nil)
-    {
-      // Copy the image data to the bitmap
-      memcpy([bitmap bitmapData], [imageData bytes], [imageData length]);
-    }
+  NSGraphicsContext *context = [NSGraphicsContext graphicsContextWithBitmapImageRep: bitmap];
+  [NSGraphicsContext saveGraphicsState];
+  [NSGraphicsContext setCurrentContext: context];
+
+  NSAffineTransform *transform = [NSAffineTransform transform];
+  [transform translateXBy: rect.origin.x yBy: rect.origin.y];
+  [transform concat];
+
+  NSView *prevPrintingView = viewIsPrinting;
+  viewIsPrinting = self; // Pretend we are printing as we need to do the same things to cache to a bitmap
+  [self displayRectIgnoringOpacity: rect inContext: context];
+  viewIsPrinting = prevPrintingView;
+
+  [NSGraphicsContext restoreGraphicsState];
 }
 
 
