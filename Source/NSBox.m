@@ -36,6 +36,7 @@
 #import <Foundation/NSString.h>
 
 #import "AppKit/NSBox.h"
+#import "AppKit/NSBezierPath.h"
 #import "AppKit/NSColor.h"
 #import "AppKit/NSGraphics.h"
 #import "AppKit/NSTextFieldCell.h"
@@ -452,27 +453,45 @@
 //
 - (void) drawRect: (NSRect)rect
 {
-  NSColor *color;
-
   rect = NSIntersectionRect(_bounds, rect);
-  if (_box_type == NSBoxCustom)
+  if ((_box_type == NSBoxCustom) && (_border_type == NSLineBorder))
     {
-      if (_transparent)
+      if (_corner_radius != 0.0)
         {
-          color = [NSColor clearColor];
+          NSBezierPath *path = [NSBezierPath bezierPathWithRoundedRect: _border_rect xRadius: _corner_radius yRadius: _corner_radius];
+          [path setLineWidth: _border_width];
+
+          if (!_transparent)
+            {
+              // Fill inside
+              [_fill_color set];
+              [path fill];
+            }
+
+          // Draw border
+          [_border_color set];
+          [path stroke];
         }
       else
         {
-          color = _fill_color;
+          if (!_transparent)
+            {
+              // Fill inside
+              [_fill_color set];
+              NSRectFill(rect);
+            }
+
+          // Draw border
+          [_border_color set];
+          NSFrameRectWithWidth(_border_rect, _border_width);
         }
     }
-  else
+  else if (!_transparent)
     {
-      color = [_window backgroundColor];
+      // Fill inside
+      [[_window backgroundColor] set];
+      NSRectFill(rect);
     }
-  // Fill inside
-  [color set];
-  NSRectFill(rect);
 
   // Draw border
   switch (_border_type)
@@ -480,12 +499,7 @@
       case NSNoBorder: 
 	break;
       case NSLineBorder: 
-        if (_box_type == NSBoxCustom)
-          {
-            [_border_color set];
-            NSFrameRectWithWidth(_border_rect, _border_width);
-          }
-        else
+        if (_box_type != NSBoxCustom)
           {
             [[NSColor controlDarkShadowColor] set];
             NSFrameRect(_border_rect);
@@ -504,9 +518,9 @@
     {
       // If the title is on the border, clip a hole in the later 
       if ((_border_type != NSNoBorder)
-	&& ((_title_position == NSAtTop) || (_title_position == NSAtBottom)))
+	&& ((_title_position == NSAtTop) || (_title_position == NSAtBottom)) && !_transparent)
         {
-          [color set];
+          [[_window backgroundColor] set];
           NSRectFill(_title_rect);
         }
       [_cell drawWithFrame: _title_rect inView: self];
@@ -652,6 +666,53 @@
           NSView *contentView = [aDecoder decodeObjectForKey: @"NSContentView"];
 
           [self setContentView: contentView];
+        }
+
+      if (_box_type == NSBoxCustom)
+        {
+          if ([aDecoder containsValueForKey: @"NSBorderColor2"])
+            {
+              NSColor *borderColor = [aDecoder decodeObjectForKey: @"NSBorderColor2"];
+
+              [self setBorderColor: borderColor];
+            }
+          else
+            {
+              [self setBorderColor: [NSColor colorWithCalibratedWhite: 0.0 alpha: 0.42]];
+            }
+
+          if ([aDecoder containsValueForKey: @"NSFillColor2"])
+            {
+              NSColor *fillColor = [aDecoder decodeObjectForKey: @"NSFillColor2"];
+
+              [self setFillColor: fillColor];
+            }
+          else
+            {
+              [self setFillColor: [NSColor clearColor]];
+            }
+
+          if ([aDecoder containsValueForKey: @"NSBorderWidth2"])
+            {
+              double borderWidth = [[aDecoder decodeObjectForKey: @"NSBorderWidth2"] doubleValue];
+
+              [self setBorderWidth: borderWidth];
+            }
+          else
+            {
+              [self setBorderWidth: 1.0];
+            }
+
+          if ([aDecoder containsValueForKey: @"NSCornerRadius2"])
+            {
+              double cornerRadius = [aDecoder decodeDoubleForKey: @"NSCornerRadius2"];
+
+              [self setCornerRadius: cornerRadius];
+            }
+          else
+            {
+              [self setCornerRadius: 0.0];
+            }
         }
     }
   else
