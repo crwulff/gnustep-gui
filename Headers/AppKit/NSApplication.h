@@ -294,6 +294,7 @@ APPKIT_EXPORT NSString	*NSEventTrackingRunLoopMode;
  * Managing windows
  */
 - (NSWindow*) keyWindow;
+- (NSWindow*) _keyWindow;
 - (NSWindow*) mainWindow;
 - (NSWindow*) makeWindowsPerform: (SEL)aSelector
 			 inOrder: (BOOL)flag;

@@ -2634,6 +2634,11 @@ image.</p><p>See Also: -applicationIconImage</p>
   return _key_window;
 }
 
+- (NSWindow*) _keyWindow
+{
+  return _key_window;
+}
+
 /**
  * Returns current main window of this application. There need not necessarily
  * be a main window, even if app is active, and this should return nil if the
