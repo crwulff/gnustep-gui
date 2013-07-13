@@ -399,6 +399,8 @@ APPKIT_EXPORT NSString	*NSEventTrackingRunLoopMode;
 - (NSInteger) requestUserAttention: (NSRequestUserAttentionType)requestType;
 #endif
 
+- (NSInteger) contextID;
+
 @end
 
 /**

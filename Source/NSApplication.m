@@ -3740,6 +3740,12 @@ struct _DelegateWrapper
   return self;
 }
 
+- (NSInteger) contextID
+{
+  // TODO
+  return 0;
+}
+
 @end /* NSApplication */
 
 
