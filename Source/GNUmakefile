@@ -187,6 +187,7 @@ NSToolbarItem.m \
 NSToolbarItemGroup.m \
 NSTokenField.m \
 NSTokenFieldCell.m \
+NSTrackingArea.m \
 NSTreeController.m \
 NSUserDefaultsController.m \
 NSView.m \
@@ -395,6 +396,7 @@ NSToolbarItem.h \
 NSToolbarItemGroup.h \
 NSTokenField.h \
 NSTokenFieldCell.h \
+NSTrackingArea.h \
 NSTreeController.h \
 NSUserDefaultsController.h \
 NSView.h \

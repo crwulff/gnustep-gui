@@ -37,6 +37,7 @@
 #import <AppKit/NSGraphicsContext.h>
 #import <AppKit/NSResponder.h>
 #import <AppKit/NSAnimation.h>
+#import <AppKit/NSTrackingArea.h>
 
 @class NSArray;
 @class NSAttributedString;
@@ -457,6 +458,9 @@ PACKAGE_SCOPE
 - (void) setToolTip: (NSString *)string;
 - (NSString *) toolTip;
 #endif
+
+- (void) addTrackingArea: (NSTrackingArea*)trackingArea;
+- (void) removeTrackingArea: (NSTrackingArea*)trackingArea;
 
 /**
  * Removes a tracking rectangle which was previously established using the

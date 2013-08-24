@@ -3626,6 +3626,20 @@ static NSView* findByTag(NSView *view, NSInteger aTag, NSUInteger *level)
   return NO;
 }
 
+- (void) addTrackingArea: (NSTrackingArea*)trackingArea
+{
+  [trackingArea setTag:
+    [self addTrackingRect: [trackingArea rect]
+                    owner: [trackingArea owner]
+                 userData: [trackingArea userInfo]
+             assumeInside: [trackingArea options] & NSTrackingAssumeInside]];
+}
+
+- (void) removeTrackingArea: (NSTrackingArea*)trackingArea
+{
+  [self removeTrackingRect: [trackingArea tag]];
+}
+
 - (NSTrackingRectTag) addTrackingRect: (NSRect)aRect
 				owner: (id)anObject
 			     userData: (void*)data
